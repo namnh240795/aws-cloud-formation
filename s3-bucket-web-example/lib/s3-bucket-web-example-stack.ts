@@ -20,8 +20,8 @@ export class S3BucketWebExampleStack extends cdk.Stack {
       websiteErrorDocument: 'error.html',
     });
 
-    new cdk.aws_s3_deployment.BucketDeployment(this, "DeployWithInvalidation", {
-      sources: [cdk.aws_s3_deployment.Source.asset(process.cwd() + "/build")],
+    new cdk.aws_s3_deployment.BucketDeployment(this, "VueDeployment", {
+      sources: [cdk.aws_s3_deployment.Source.asset(process.cwd() + "/sample-web/dist")],
       destinationBucket: bucket,
     });
 
