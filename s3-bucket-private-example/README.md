@@ -15,10 +15,14 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
 
 ## Note
-Public accessible S3 Bucket Service
+Private S3 Bucket Service
 
-Everyone can read everything from this bucket
+No one could reach this bucket
 
-Sample url:
+Content gonna be serve via cloudfront distribution
 
-[My Avatar](https://namnh240795-s3-bucket-example.s3.ap-southeast-1.amazonaws.com/344562100_2606001262899897_1534286976879047120_n.jpg)
+Can Access:
+[My Avatar](https://dxh8mu1jahq8s.cloudfront.net/344562100_2606001262899897_1534286976879047120_n.jpg)
+
+Blocked Access:
+[My Blocked Avatar](https://namnh240795-s3-bucket-private-example.s3.ap-southeast-1.amazonaws.com/344562100_2606001262899897_1534286976879047120_n.jpg)
