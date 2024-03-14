@@ -29,7 +29,7 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
 * Private subnet: Database, Redis, ...
 
-![IMG](./vpc-sample.png)
+![IMG](./vpc-sample.png =415x575.333333333)
 
 ### CIDR Explaination
 
