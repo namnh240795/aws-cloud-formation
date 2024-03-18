@@ -115,5 +115,18 @@ export class VpcExampleStack extends cdk.Stack {
       subnetId: publicSubnet2.attrSubnetId,
       routeTableId: publicRouteTable.ref,
     });
+
+    // create new security group which allow outbound traffic via port 80
+    const outboundAllSg = new cdk.aws_ec2.CfnSecurityGroup(this, 'AWS-CF-VPC-Example-Outbound-SecurityGroup', {
+      groupDescription: 'Allow outbound traffic via port 80',
+      groupName: 'namnh240795-vpc-example-security-group',
+      vpcId: vpc.attrVpcId,
+      tags: [
+        {
+          key: 'Name',
+          value: 'namnh240795-vpc-example-out-bound-all',
+        },
+      ],
+    });
   }  
 }
