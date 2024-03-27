@@ -116,17 +116,61 @@ export class VpcExampleStack extends cdk.Stack {
       routeTableId: publicRouteTable.ref,
     });
 
-    // create new security group which allow outbound traffic via port 80
-    const outboundAllSg = new cdk.aws_ec2.CfnSecurityGroup(this, 'AWS-CF-VPC-Example-Outbound-SecurityGroup', {
-      groupDescription: 'Allow outbound traffic via port 80',
-      groupName: 'namnh240795-vpc-example-security-group',
+    // get linux 2023 ami
+    const linuxAmi = new cdk.aws_ec2.AmazonLinuxImage({
+      generation: cdk.aws_ec2.AmazonLinuxGeneration.AMAZON_LINUX_2023,
+    });
+    
+    // create security group that allow ssh
+    const ssh22sg = new cdk.aws_ec2.CfnSecurityGroup(this, 'AWS-CF-VPC-Example-SecurityGroup', {
       vpcId: vpc.attrVpcId,
+      groupDescription: 'Allow SSH',
+      securityGroupIngress: [
+        {
+          // allow ssh from any ipv4
+          cidrIp: '0.0.0.0/0',
+          fromPort: 22,
+          toPort: 22,
+          ipProtocol: 'tcp',
+        },
+      ],
       tags: [
         {
           key: 'Name',
-          value: 'namnh240795-vpc-example-out-bound-all',
+          value: 'namnh240795-vpc-example-ssh-security-group',
         },
       ],
     });
+
+    // create new keypair
+    const keyPair = new cdk.aws_ec2.CfnKeyPair(this, 'AWS-CF-VPC-Example-KeyPair', {
+      keyName: 'namnh240795-vpc-example-key-pair',
+      keyType: cdk.aws_ec2.KeyPairType.RSA
+    });
+
+    // create new ec2 instance using linux ami
+    const ec2Instance = new cdk.aws_ec2.CfnInstance(this, 'AWS-CF-VPC-Example-EC2Instance', {
+      imageId: linuxAmi.getImage(this).imageId,
+      instanceType: 't2.nano',
+      tags: [
+        {
+          key: 'Name',
+          value: 'namnh240795-vpc-example-ec2-instance',
+        },
+      ],
+      networkInterfaces: [{
+        deviceIndex: '0',
+        associatePublicIpAddress: true,
+        subnetId: publicSubnet1.attrSubnetId,
+        groupSet: [ssh22sg.ref],
+      }],
+      keyName: keyPair.keyName,
+    });
+
+
+
+
+
+  
   }  
 }
