@@ -49,91 +49,144 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
       service: cdk.aws_ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
     });
 
-
-    const cluster = new cdk.aws_ecs.Cluster(
+    // create credentials for database using secret manager
+    const secret = new cdk.aws_secretsmanager.Secret(
       this,
-      `${this.namePrefix}-ecs-cluster`,
+      `${this.namePrefix}-db-secret`,
       {
-        vpc: vpc,
+        secretName: `${this.namePrefix}-db-secret`,
+        generateSecretString: {
+          secretStringTemplate: JSON.stringify({
+            username: "namnh240795",
+            password: "namnh240795",
+          }),
+          excludePunctuation: true,
+          excludeNumbers: true,
+          includeSpace: false,
+          generateStringKey: "password",
+        },
       }
     );
-
-    const taskDefinition = new cdk.aws_ecs.FargateTaskDefinition(
-      this,
-      `${this.namePrefix}-task-definition`
-    );
-
-    const container = taskDefinition.addContainer(
-      `${this.namePrefix}-container`,
-      {
-        image: cdk.aws_ecs.ContainerImage.fromEcrRepository(
-          cdk.aws_ecr.Repository.fromRepositoryName(
-            this,
-            'namnh240795-vpc-dev-ecr-id',
-            "namnh240795-vpc-dev-ecr"
-          ),
-          "latest"
-        ),
-        logging: cdk.aws_ecs.LogDrivers.awsLogs({
-          streamPrefix: `${this.namePrefix}-container`,
-          logRetention: cdk.aws_logs.RetentionDays.ONE_WEEK,
-        }),
-        memoryLimitMiB: 512,
-        cpu: 256,
-      }
-    );
-
-    container.addPortMappings({
-      containerPort: 80,
-      hostPort: 80,
-    });
     
-    const service = new cdk.aws_ecs.FargateService(
+    
+    // i want to create rds Postgres without using Aurora
+    // create rds postgre instance
+    const db = new cdk.aws_rds.DatabaseInstance(
       this,
-      `${this.namePrefix}-service`,
+      `${this.namePrefix}-db`,
       {
-        cluster: cluster,
-        taskDefinition: taskDefinition,
-        // vpcSubnets: {
-        //   subnetType: cdk.aws_ec2.SubnetType.PRIVATE_ISOLATED,
-        // },
-        assignPublicIp: false,
-
+        engine: cdk.aws_rds.DatabaseInstanceEngine.POSTGRES,
+        instanceType: cdk.aws_ec2.InstanceType.of(
+          cdk.aws_ec2.InstanceClass.T3,
+          cdk.aws_ec2.InstanceSize.MICRO
+        ),
+        vpc: vpc,
+        vpcSubnets: {
+          subnetType: cdk.aws_ec2.SubnetType.PRIVATE_ISOLATED,
+        },
+        databaseName: "namnh240795",
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        credentials: cdk.aws_rds.Credentials.fromSecret(secret),
       }
     );
 
-    const lb = new cdk.aws_elasticloadbalancingv2.ApplicationLoadBalancer(
+    // create security group for database
+    const sg = new cdk.aws_ec2.SecurityGroup(
       this,
-      `${this.namePrefix}-lb`,
+      `${this.namePrefix}-db-sg`,
       {
         vpc: vpc,
-        internetFacing: true,
       }
     );
+    
+    // add this sg to the db
+    db.connections.allowDefaultPortFrom(sg);
 
-    const listener = lb.addListener(`${this.namePrefix}-listener`, {
-      port: 80,
-    });
 
-    listener.addTargets(`${this.namePrefix}-target`, {
-      port: 80,
-      targets: [service],
-    });
+    // const cluster = new cdk.aws_ecs.Cluster(
+    //   this,
+    //   `${this.namePrefix}-ecs-cluster`,
+    //   {
+    //     vpc: vpc,
+    //   }
+    // );
 
-    new cdk.CfnOutput(this, 'VpcId', {
-      value: vpc.vpcId,
-    });
+    // const taskDefinition = new cdk.aws_ecs.FargateTaskDefinition(
+    //   this,
+    //   `${this.namePrefix}-task-definition`
+    // );
 
-    new cdk.CfnOutput(this, 'ClusterName', {
-      value: cluster.clusterName,
-    });
+    // const container = taskDefinition.addContainer(
+    //   `${this.namePrefix}-container`,
+    //   {
+    //     image: cdk.aws_ecs.ContainerImage.fromEcrRepository(
+    //       cdk.aws_ecr.Repository.fromRepositoryName(
+    //         this,
+    //         'namnh240795-vpc-dev-ecr-id',
+    //         "namnh240795-vpc-dev-ecr"
+    //       ),
+    //       "latest"
+    //     ),
+    //     logging: cdk.aws_ecs.LogDrivers.awsLogs({
+    //       streamPrefix: `${this.namePrefix}-container`,
+    //       logRetention: cdk.aws_logs.RetentionDays.ONE_WEEK,
+    //     }),
+    //     memoryLimitMiB: 512,
+    //     cpu: 256,
+    //   }
+    // );
 
-    new cdk.CfnOutput(this, 'LoadBalancerDnsName', {
-      value: lb.loadBalancerDnsName,
-    });
+    // container.addPortMappings({
+    //   containerPort: 80,
+    //   hostPort: 80,
+    // });
+    
+    // const service = new cdk.aws_ecs.FargateService(
+    //   this,
+    //   `${this.namePrefix}-service`,
+    //   {
+    //     cluster: cluster,
+    //     taskDefinition: taskDefinition,
+    //     // vpcSubnets: {
+    //     //   subnetType: cdk.aws_ec2.SubnetType.PRIVATE_ISOLATED,
+    //     // },
+    //     assignPublicIp: false,
 
-    new cdk.CfnOutput(this, 'ServiceName', {
-      value: service.serviceName,
-    });
+    //   }
+    // );
+
+    // const lb = new cdk.aws_elasticloadbalancingv2.ApplicationLoadBalancer(
+    //   this,
+    //   `${this.namePrefix}-lb`,
+    //   {
+    //     vpc: vpc,
+    //     internetFacing: true,  
+    //   }
+    // );
+
+    // const listener = lb.addListener(`${this.namePrefix}-listener`, {
+    //   port: 80,
+    // });
+
+    // listener.addTargets(`${this.namePrefix}-target`, {
+    //   port: 80,
+    //   targets: [service],
+    // });
+
+    // new cdk.CfnOutput(this, 'VpcId', {
+    //   value: vpc.vpcId,
+    // });
+
+    // new cdk.CfnOutput(this, 'ClusterName', {
+    //   value: cluster.clusterName,
+    // });
+
+    // new cdk.CfnOutput(this, 'LoadBalancerDnsName', {
+    //   value: lb.loadBalancerDnsName,
+    // });
+
+    // new cdk.CfnOutput(this, 'ServiceName', {
+    //   value: service.serviceName,
+    // });
   }
 }
