@@ -13,7 +13,7 @@ dotenv.config();
 
 const getSecret = async () => {
   const secret_name =
-    'arn:aws:secretsmanager:ap-southeast-1:571678314364:secret:namnh240795-db-secret-9SDLQE';
+    'arn:aws:secretsmanager:ap-southeast-1:571678314364:secret:namnh240795-db-secret-2UI1dZ';
 
   const client = new SecretsManagerClient({
     region: 'ap-southeast-1',
@@ -43,10 +43,12 @@ const getSecret = async () => {
   const DBHOST = secretObj.host;
   const DBPORT = secretObj.port;
   const DBNAME = secretObj.dbname;
+  const DATABASE_URL = `postgres://${DBUSER}:${DBPASS}@${DBHOST}:${DBPORT}/${DBNAME}`;
+  const PORT = 80;
   // write all this into .env
   fs.writeFileSync(
     path.join(__dirname, '.env'),
-    `DBPASS=${DBPASS}\nDBUSER=${DBUSER}\nDBHOST=${DBHOST}\nDBPORT=${DBPORT}\nDBNAME=${DBNAME}`,
+    `DBPASS=${DBPASS}\nDBUSER=${DBUSER}\nDBHOST=${DBHOST}\nDBPORT=${DBPORT}\nDBNAME=${DBNAME}\nDATABASE_URL=${DATABASE_URL}\nPORT=${PORT}`,
   );
 };
 
