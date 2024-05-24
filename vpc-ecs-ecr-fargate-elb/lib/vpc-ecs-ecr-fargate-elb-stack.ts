@@ -98,80 +98,80 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
         vpc: vpc,
       }
     );
-    
+
     // add this sg to the db
     db.connections.allowDefaultPortFrom(sg);
 
 
-    // const cluster = new cdk.aws_ecs.Cluster(
-    //   this,
-    //   `${this.namePrefix}-ecs-cluster`,
-    //   {
-    //     vpc: vpc,
-    //   }
-    // );
+    const cluster = new cdk.aws_ecs.Cluster(
+      this,
+      `${this.namePrefix}-ecs-cluster`,
+      {
+        vpc: vpc,
+      }
+    );
 
-    // const taskDefinition = new cdk.aws_ecs.FargateTaskDefinition(
-    //   this,
-    //   `${this.namePrefix}-task-definition`
-    // );
+    const taskDefinition = new cdk.aws_ecs.FargateTaskDefinition(
+      this,
+      `${this.namePrefix}-task-definition`
+    );
 
-    // const container = taskDefinition.addContainer(
-    //   `${this.namePrefix}-container`,
-    //   {
-    //     image: cdk.aws_ecs.ContainerImage.fromEcrRepository(
-    //       cdk.aws_ecr.Repository.fromRepositoryName(
-    //         this,
-    //         'namnh240795-vpc-dev-ecr-id',
-    //         "namnh240795-vpc-dev-ecr"
-    //       ),
-    //       "latest"
-    //     ),
-    //     logging: cdk.aws_ecs.LogDrivers.awsLogs({
-    //       streamPrefix: `${this.namePrefix}-container`,
-    //       logRetention: cdk.aws_logs.RetentionDays.ONE_WEEK,
-    //     }),
-    //     memoryLimitMiB: 512,
-    //     cpu: 256,
-    //   }
-    // );
+    const container = taskDefinition.addContainer(
+      `${this.namePrefix}-container`,
+      {
+        image: cdk.aws_ecs.ContainerImage.fromEcrRepository(
+          cdk.aws_ecr.Repository.fromRepositoryName(
+            this,
+            'namnh240795-vpc-dev-ecr-id',
+            "namnh240795-vpc-dev-ecr"
+          ),
+          "latest"
+        ),
+        logging: cdk.aws_ecs.LogDrivers.awsLogs({
+          streamPrefix: `${this.namePrefix}-container`,
+          logRetention: cdk.aws_logs.RetentionDays.ONE_WEEK,
+        }),
+        memoryLimitMiB: 512,
+        cpu: 256,
+      }
+    );
 
-    // container.addPortMappings({
-    //   containerPort: 80,
-    //   hostPort: 80,
-    // });
+    container.addPortMappings({
+      containerPort: 80,
+      hostPort: 80,
+    });
     
-    // const service = new cdk.aws_ecs.FargateService(
-    //   this,
-    //   `${this.namePrefix}-service`,
-    //   {
-    //     cluster: cluster,
-    //     taskDefinition: taskDefinition,
-    //     // vpcSubnets: {
-    //     //   subnetType: cdk.aws_ec2.SubnetType.PRIVATE_ISOLATED,
-    //     // },
-    //     assignPublicIp: false,
+    const service = new cdk.aws_ecs.FargateService(
+      this,
+      `${this.namePrefix}-service`,
+      {
+        cluster: cluster,
+        taskDefinition: taskDefinition,
+        vpcSubnets: {
+          subnetType: cdk.aws_ec2.SubnetType.PRIVATE_ISOLATED,
+        },
+        assignPublicIp: false,
 
-    //   }
-    // );
+      }
+    );
 
-    // const lb = new cdk.aws_elasticloadbalancingv2.ApplicationLoadBalancer(
-    //   this,
-    //   `${this.namePrefix}-lb`,
-    //   {
-    //     vpc: vpc,
-    //     internetFacing: true,  
-    //   }
-    // );
+    const lb = new cdk.aws_elasticloadbalancingv2.ApplicationLoadBalancer(
+      this,
+      `${this.namePrefix}-lb`,
+      {
+        vpc: vpc,
+        internetFacing: true,  
+      }
+    );
 
-    // const listener = lb.addListener(`${this.namePrefix}-listener`, {
-    //   port: 80,
-    // });
+    const listener = lb.addListener(`${this.namePrefix}-listener`, {
+      port: 80,
+    });
 
-    // listener.addTargets(`${this.namePrefix}-target`, {
-    //   port: 80,
-    //   targets: [service],
-    // });
+    listener.addTargets(`${this.namePrefix}-target`, {
+      port: 80,
+      targets: [service],
+    });
 
     // new cdk.CfnOutput(this, 'VpcId', {
     //   value: vpc.vpcId,
