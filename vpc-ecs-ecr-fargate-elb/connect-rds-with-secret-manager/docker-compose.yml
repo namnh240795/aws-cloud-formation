@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgis/postgis
+    restart: always
+    env_file:
+      - '.env'
+    environment:
+      POSTGRES_USER: ${PGUSER}
+      POSTGRES_PASSWORD: ${PGPASS}
+    ports:
+      - ${PGPORT}:${PGPORT}
+    volumes:
+      - namnh240795db:/var/lib/postgresql/data
+    
+
+volumes:
+  namnh240795db:
+    driver: local
