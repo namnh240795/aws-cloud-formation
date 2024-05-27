@@ -55,9 +55,9 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
     });
 
     // add rds endpoint for ecs
-    vpc.addInterfaceEndpoint(`${this.namePrefix}-rds`, {
-      service: cdk.aws_ec2.InterfaceVpcEndpointAwsService.RDS,
-    });
+    // vpc.addInterfaceEndpoint(`${this.namePrefix}-rds`, {
+    //   service: cdk.aws_ec2.InterfaceVpcEndpointAwsService.RDS,
+    // });
     
 
     // create credentials for database using secret manager
