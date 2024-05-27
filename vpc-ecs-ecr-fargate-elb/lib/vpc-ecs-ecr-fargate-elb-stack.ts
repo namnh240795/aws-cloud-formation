@@ -54,6 +54,12 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
       service: cdk.aws_ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
     });
 
+    // add rds endpoint for ecs
+    vpc.addInterfaceEndpoint(`${this.namePrefix}-rds`, {
+      service: cdk.aws_ec2.InterfaceVpcEndpointAwsService.RDS,
+    });
+    
+
     // create credentials for database using secret manager
     const secret = new cdk.aws_secretsmanager.Secret(
       this,
@@ -106,7 +112,7 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
 
     // add this sg to the db
     db.connections.allowDefaultPortFrom(sg);
-
+    
 
     const cluster = new cdk.aws_ecs.Cluster(
       this,
@@ -141,6 +147,28 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
         principals: [new cdk.aws_iam.AnyPrincipal()],
       })
     );
+    
+    // const create sgtaskdef
+    const sgFargateTask = new cdk.aws_ec2.SecurityGroup(
+      this,
+      `${this.namePrefix}-sg-fargate-task`,
+      {
+        vpc: vpc,
+        allowAllIpv6Outbound: true,
+        allowAllOutbound: true,
+      }
+    );
+    
+    // do the same for ingress
+    sgFargateTask.addIngressRule(
+      cdk.aws_ec2.Peer.anyIpv4(),
+      cdk.aws_ec2.Port.allTraffic()
+    );
+
+    sgFargateTask.addIngressRule(
+      cdk.aws_ec2.Peer.anyIpv6(),
+      cdk.aws_ec2.Port.allTraffic()
+    );
 
     const container = taskDefinition.addContainer(
       `${this.namePrefix}-container`,
@@ -159,7 +187,6 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
         }),
         memoryLimitMiB: 512,
         cpu: 256,
-        
       }
     );
 
@@ -178,6 +205,7 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
           subnetType: cdk.aws_ec2.SubnetType.PRIVATE_ISOLATED,
         },
         assignPublicIp: false,
+        securityGroups: [sgFargateTask],
       }
     );
 
