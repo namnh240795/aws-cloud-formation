@@ -13,7 +13,7 @@ dotenv.config();
 
 const getSecret = async () => {
   const secret_name =
-    'arn:aws:secretsmanager:ap-southeast-1:571678314364:secret:namnh240795-db-secret-2UI1dZ';
+    'arn:aws:secretsmanager:ap-southeast-1:571678314364:secret:namnh240795-db-secret-4D5paT';
 
   const client = new SecretsManagerClient({
     region: 'ap-southeast-1',
@@ -37,6 +37,8 @@ const getSecret = async () => {
   const secret = response.SecretString;
   const secretObj = JSON.parse(secret);
 
+  console.log('process.env', process.env);
+
   console.log('getSecret -> secret', secretObj);
   const DBPASS = secretObj.password;
   const DBUSER = secretObj.username;
@@ -47,7 +49,7 @@ const getSecret = async () => {
   const PORT = 80;
   // write all this into .env
   fs.writeFileSync(
-    path.join(__dirname, '.env'),
+    '.env',
     `DBPASS=${DBPASS}\nDBUSER=${DBUSER}\nDBHOST=${DBHOST}\nDBPORT=${DBPORT}\nDBNAME=${DBNAME}\nDATABASE_URL=${DATABASE_URL}\nPORT=${PORT}`,
   );
 };

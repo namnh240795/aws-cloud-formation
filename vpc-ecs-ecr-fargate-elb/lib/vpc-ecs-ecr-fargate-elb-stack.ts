@@ -49,6 +49,11 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
       service: cdk.aws_ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
     });
 
+    // add secret manager endpoint
+    vpc.addInterfaceEndpoint(`${this.namePrefix}-secret-manager`, {
+      service: cdk.aws_ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
+    });
+
     // create credentials for database using secret manager
     const secret = new cdk.aws_secretsmanager.Secret(
       this,
@@ -116,6 +121,27 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
       `${this.namePrefix}-task-definition`
     );
 
+    // create task execution role for ecs that have access to secret manager
+    const taskExecutionRole = new cdk.aws_iam.Role(
+      this,
+      `${this.namePrefix}-ecs-execution-role`,
+      {
+        assumedBy: new cdk.aws_iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+      }
+    );
+
+    secret.grantRead(taskExecutionRole);
+
+    // allow task execution role to access secret via resource policy
+    secret.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        actions: ['secretsmanager:GetSecretValue'],
+        resources: [secret.secretArn],
+        effect: cdk.aws_iam.Effect.ALLOW,
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+      })
+    );
+
     const container = taskDefinition.addContainer(
       `${this.namePrefix}-container`,
       {
@@ -133,6 +159,7 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
         }),
         memoryLimitMiB: 512,
         cpu: 256,
+        
       }
     );
 
@@ -151,27 +178,26 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
           subnetType: cdk.aws_ec2.SubnetType.PRIVATE_ISOLATED,
         },
         assignPublicIp: false,
-
       }
     );
 
-    const lb = new cdk.aws_elasticloadbalancingv2.ApplicationLoadBalancer(
-      this,
-      `${this.namePrefix}-lb`,
-      {
-        vpc: vpc,
-        internetFacing: true,  
-      }
-    );
+    // const lb = new cdk.aws_elasticloadbalancingv2.ApplicationLoadBalancer(
+    //   this,
+    //   `${this.namePrefix}-lb`,
+    //   {
+    //     vpc: vpc,
+    //     internetFacing: true,  
+    //   }
+    // );
 
-    const listener = lb.addListener(`${this.namePrefix}-listener`, {
-      port: 80,
-    });
+    // const listener = lb.addListener(`${this.namePrefix}-listener`, {
+    //   port: 80,
+    // });
 
-    listener.addTargets(`${this.namePrefix}-target`, {
-      port: 80,
-      targets: [service],
-    });
+    // listener.addTargets(`${this.namePrefix}-target`, {
+    //   port: 80,
+    //   targets: [service],
+    // });
 
     // new cdk.CfnOutput(this, 'VpcId', {
     //   value: vpc.vpcId,
