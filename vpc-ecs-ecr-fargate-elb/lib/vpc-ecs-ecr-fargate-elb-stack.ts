@@ -170,6 +170,9 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
       cdk.aws_ec2.Port.allTraffic()
     );
 
+    db.connections.allowFrom(sgFargateTask, cdk.aws_ec2.Port.tcp(5432));
+
+
     const container = taskDefinition.addContainer(
       `${this.namePrefix}-container`,
       {
