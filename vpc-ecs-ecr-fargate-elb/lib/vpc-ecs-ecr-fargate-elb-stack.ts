@@ -54,6 +54,12 @@ export class VpcEcsEcrFargateElbStack extends cdk.Stack {
       service: cdk.aws_ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
     });
 
+    // vpc to dynamodb
+    vpc.addGatewayEndpoint(`${this.namePrefix}-dynamodb-gw`, {
+      service: cdk.aws_ec2.GatewayVpcEndpointAwsService.DYNAMODB,
+    });
+    
+
     // add rds endpoint for ecs
     // vpc.addInterfaceEndpoint(`${this.namePrefix}-rds`, {
     //   service: cdk.aws_ec2.InterfaceVpcEndpointAwsService.RDS,
