@@ -166,11 +166,5 @@ export class VpcExampleStack extends cdk.Stack {
       }],
       keyName: keyPair.keyName,
     });
-
-
-
-
-
-  
   }  
 }
